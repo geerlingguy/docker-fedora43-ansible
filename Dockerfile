@@ -4,7 +4,9 @@ ENV container "docker"
 
 ENV pip_packages "ansible"
 
-RUN dnf5 -y update && dnf5 clean all
+RUN echo "max_parallel_downloads=20" >> /etc/dnf/dnf.conf
+
+RUN dnf5 -y update && dnf clean all
 
 # Enable systemd.
 RUN dnf5 -y install systemd && dnf5 clean all && \
@@ -18,16 +20,16 @@ RUN dnf5 -y install systemd && dnf5 clean all && \
   rm -f /lib/systemd/system/anaconda.target.wants/*;
 
 # Install pip and other requirements.
-RUN dnf5 makecache \
-  && dnf5 -y install \
-    python3-pip \
+RUN dnf makecache \
+  && dnf -y install \
+    uv \
     sudo \
     which \
     python3-libdnf5 \
   && dnf5 clean all
 
 # Install Ansible via Pip.
-RUN pip3 install $pip_packages
+RUN uv pip install $pip_packages --system
 
 # Disable requiretty.
 RUN sed -i -e 's/^\(Defaults\s*requiretty\)/#--- \1/'  /etc/sudoers
